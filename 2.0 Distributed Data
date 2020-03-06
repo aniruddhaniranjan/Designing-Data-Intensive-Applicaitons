@@ -1,0 +1,5 @@
+Reasons for distributing database over multiple machines:
+Scalability - Data volume, read and write load can grow bigger than a single machine
+Fault tolerance/high availability - when one machine fails another can take over (multiple machines provide redundancy)
+Latency - Users in different locations can be served by datacenters which are closer to them (avoid network delays)
+
