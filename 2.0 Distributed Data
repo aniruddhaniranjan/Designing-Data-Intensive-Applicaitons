@@ -3,3 +3,13 @@ Scalability - Data volume, read and write load can grow bigger than a single mac
 Fault tolerance/high availability - when one machine fails another can take over (multiple machines provide redundancy)
 Latency - Users in different locations can be served by datacenters which are closer to them (avoid network delays)
 
+Scaling to a Higher Load
+If only handling higher load is a concern, then vertical scaling can be done. Multiple CPUs, RAM, disks. Shared-memory architecture. This leads to non-uniform memory access, NUMA, where disks closer to a CPU are accessed more often. Drawbacks are that double the resources usually costs significantly more than double, and due to bottlenecks the machine might not handle twice the traffic. Might offer some fault tolerance (hot-swap) but only in the same geo-location. 
+Another approach is separate CPUs, RAMs but shared array of disks (Shared-disk architecture) but this has issues with contention and locking.
+
+Shared-Nothing architecture
+This is also called horizontal scaling or scaling out. It overcomes the issues with vertical scaling.
+Co-ordination between machines or VMs, called NODES, is done at the software level. This requires most care to be taken by application developers - understanding trade-offs and constraints. It adds additional complexity and "limits the expressiveness of data models"
+
+Replication copies same data on different nodes and provides redundancy
+Partitioning splits the data set into subsets which are assigned to different nodes
