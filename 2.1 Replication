@@ -1,0 +1,25 @@
+3 Main Purposes - reduce latency by being geographically closer, allow system to continue working even if some components fail, serve more queries by scaling out machines. All issues with replication occur when the data is modified.
+3 types of replication - single-leader, multi-leader, leaderless
+Trade-offs with replication - synchronous/asynchronous and what to do with failed replicas
+
+Leaders and Followers:
+Replica is a node that stores copy of data. Leader and follower concepts arise when discussing writes being propogated to all replicas. Leader-based replication is also known as active-passive or master-slave.
+1. One of the replicas is called leader. When application writes, it sends the request to leader which writes the data to local storage.
+2. Then the leader sends new data to all followers in form of a Replication Log or Change Stream. Each follower writes these changes to local storage in the same order as they were written on leader.
+3. Reads can be performed at leader or follower while writes are performed only at leader.
+Used in MySQL, MongoDB, distributed message brokers such as Kafka and ActiveMQ
+
+Synchronous vs Asynchronous Replication
+Once a write request is submitted, at some point the leader notifies the client that request was successful. In synchronous replication, leader waits for acknowledgement from follower that it received the request before sending success to client (and making write visible to other clients). In asynchronous, the leader responds with a success soon after forwarding request to follower.
+If response from follower is slow, async is preferred (usually replication is fast, less than a second).
+
+Adv of sync - guarantee that follower received request and data is available if leader goes down
+Disadv of sync - if follower goes down, leader can't process the request and has to halt all requests till follower is back
+
+All followers can't be synchronous as the entire systems stops if one node doesn't respond. Some (at least one) followers can be sync and others async. So at least 2 nodes will have latest data. This is called Semi-Synchronous. If sync follower goes down, an async follower is upgraded to sync.
+
+Adv of async - writes can be processed at leader even if all followers are down
+Disadv of async - writes that are not processed at followers can be lost
+Purely async is used if many followers are in separate locations
+
+Setting up new followers
