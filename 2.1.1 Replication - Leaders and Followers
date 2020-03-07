@@ -23,10 +23,26 @@ Disadv of async - writes that are not processed at followers can be lost
 Purely async is used if many followers are in separate locations
 
 Setting up new followers
-Needed to increase no. of replicas or replace failed nodes. Need a mechanism other than simple copy of files in file system. Data is always being written and is in flux - causes inconsistency at different nodes. Locking the database makes it unavailable for writes (high availability compromised). Must be done without downtime. Steps are:
+Needed to increase no. of replicas or replace failed nodes. Need a mechanism other than simple copy of DB files in file system. Data is always being written and is in flux - causes inconsistency at different nodes. Locking the database makes it unavailable for writes (high availability compromised). Must be done without downtime. Steps are:
 a. Take a snapshot of the leader's database at some point in time - without locking the database
 b. Copy this snapshot to the newly created follower node
 c. Follower connects to leader and requests all data changes that have happened at the leader node since the last snapshot (associated with an exact position in the leader's replication log.
 d. Once the follower processes all these latest data changes, it has caught up to the leader. It can continue normal functionality of processing further data changes from the leader node.
 
 Handling node outages
+Node outages occur either due to faults or planned downtime. Ability to reboot nodes without downtime is a big advantage. So, system as a whole must be available inspite of individual node failures.
+
+Follower failure is done via "Catch-up recovery" : When the follower goes down or network conn. goes down, the follower knows the last transaction that was processed. It connects back to the leader and requests all data changes that occurred since last successful transation. After processing these, it is caught up, and resumes normal processing of request at leader.
+
+Leader failure is done via "Failover" : One of the followers is promoted to new leader; Clients are reconfigured to send requests to new leader; Followers start consuming data changes from the new leader. Failover can be manual/auto. Steps are:
+a. Determine if leader is dead - Issues could be crashes, power outage, network issues. Nodes bounce messages back and forth and if a leader node hasn't responded for 30s or so - it's considered dead (no foolproof way to know)
+b. Choose new leader - Either via Election Process (by remaining nodes) or Assignement by a predetermined Controller Node. Best candidate is node with the latest data changes (minimize data loss)
+c. Reconfigure system - Clients need to send request to new leader. When old leader comes back, it might still behave as a leader not realizing it's been asked to step down by other nodes - ensure it behaves as a follower and recognizes new leader
+
+Issues with Failover
+a. In asynchronous replication scenario, the new leader may not have received all writes from old leader and the new leader might have received conflicting write requests. Usual method is to discard old leader's unreplicated writes - durability is compromised
+b. Discarding writes affects systems outside database which need to be coordinated with DB. (Ex - primary keys might become inconsistent in DB and outside system - because some PKs got reused by new leader)
+c. It could happen that two nodes behave as leader and accept writes - can result in inconsistency and conflicts. This is known as "Split-Brain". Usually one of the two nodes is forcibly shutdown (fencing) - but both nodes could end up getting shut down.
+d. Timeout values to determine dead leader node - too long means TTR is longer and too short means unnecessary failovers. (spike in traffic could increase response time of a node - false positive)
+
+Implementation of Replication Logs
