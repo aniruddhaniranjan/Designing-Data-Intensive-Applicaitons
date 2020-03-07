@@ -2,7 +2,7 @@
 3 types of replication - single-leader, multi-leader, leaderless
 Trade-offs with replication - synchronous/asynchronous and what to do with failed replicas
 
-Leaders and Followers:
+Leaders and Followers
 Replica is a node that stores copy of data. Leader and follower concepts arise when discussing writes being propogated to all replicas. Leader-based replication is also known as active-passive or master-slave.
 1. One of the replicas is called leader. When application writes, it sends the request to leader which writes the data to local storage.
 2. Then the leader sends new data to all followers in form of a Replication Log or Change Stream. Each follower writes these changes to local storage in the same order as they were written on leader.
@@ -23,3 +23,10 @@ Disadv of async - writes that are not processed at followers can be lost
 Purely async is used if many followers are in separate locations
 
 Setting up new followers
+Needed to increase no. of replicas or replace failed nodes. Need a mechanism other than simple copy of files in file system. Data is always being written and is in flux - causes inconsistency at different nodes. Locking the database makes it unavailable for writes (high availability compromised). Must be done without downtime. Steps are:
+a. Take a snapshot of the leader's database at some point in time - without locking the database
+b. Copy this snapshot to the newly created follower node
+c. Follower connects to leader and requests all data changes that have happened at the leader node since the last snapshot (associated with an exact position in the leader's replication log.
+d. Once the follower processes all these latest data changes, it has caught up to the leader. It can continue normal functionality of processing further data changes from the leader node.
+
+Handling node outages
