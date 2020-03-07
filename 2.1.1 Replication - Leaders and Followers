@@ -46,3 +46,21 @@ c. It could happen that two nodes behave as leader and accept writes - can resul
 d. Timeout values to determine dead leader node - too long means TTR is longer and too short means unnecessary failovers. (spike in traffic could increase response time of a node - false positive)
 
 Implementation of Replication Logs
+Statement-Based Replication - Leader logs every request or "Statement" that it executes and sends the replication log to its followers. The follower parses these statements and executes as if it's received from a client. Issues with this are:
+a. Any statement that calls a non-deterministic function (RAND() or NOW()) will return different values on each node
+b. If the statements use an auto-incrementing column or if they depend on existing data, then statements must be executed in the same exact order on each node, to get same result (this is a problem when there are multiple concurrently executing transactions)
+c. Statements have different side-effects on different replicas (stored procs, triggers, UDF) unless effects are deterministic
+
+Write-Ahead-Log (WAL) Shipping
+Here the log is an append-only sequence of bytes containing all writes to the database. Exact same log is used to build a replica - log is written to disk + sent to followers. When follower processes this, it builds an exact copy of the data structures as on the leader. The log describes data at a low-level - which bytes are modified on which disk blocks. So, replication is closely coupled to storage engine - if storage format version is changed, it's not possible to run different version of DB software on leader and follower.
+If replication protocol allows follower to use newer software version, a zero-downtime upgrade of DB software can be done - by upgrading followers and then promoting one to leader. Otherwise downtime is needed DB software upgrade.
+
+Logical (row-based) log replication
+Use different log formats for replication and storage engine (decouples repl. log from storage engine internals). Hence it's called logical log, compared to storage engine's "Physical" data representation. A sequence of records desc. writes to DB tables based on row:
+a. For inserted row, log contains values of all columns
+b. For deleted row, log contains info to uniquely identify row - PK or old values of all columns
+c. For updated row, log contains info to uniquely identify row plus new values of all/updated columns
+Due to decoupling, leader and follower can be more backward compatible, running different versions of DB software or storage engines. Logical log format is easier for external apps to parse (send DB contents to warehouse, build custom index/cache). This is called "Change Data Capture"
+
+Trigger-based replication
+This involves repl. by application code rather than by DB system above. Need to replicate subset of data, from one kind of DB to another or you need conflict resolution logic. (Features such as triggers or stored procs.) Triggers allow registration of custom appl. logic which is executed when data change occures - trigger can log this change to separate table which can be ready by external process. The external process applies logic and replicate to a diff. system. This approach is more prone to bugs and limitations but is flexible
