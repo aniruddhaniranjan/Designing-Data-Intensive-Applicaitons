@@ -1,1 +1,18 @@
+Drawback of single leader replication - if client can't connect to leader, you can't write to the system. Allow more than one node to accept writes - Each node forwards data changes to followers. This is "Master-Master" or "Active-Active" Replication
 
+Use Cases for Multi-Leader Replication (rarely used if only 1 DC):
+
+1. Multi-Datacenter operation: Several different DCs (latency, failure tolerance) - if only one leader, then all writes go through single DC. Solution is to have one leader in each DC. Within a DC, leader forwards data changes to its followers. Also, replication is done between leaders in different DCs. Comparison b/w single leader and multi-leader:
+a. Performance - In case of single leader, operation is slower as each write has to go through a particular DC (and doesn't gain much from having multiple DCs). In case of multi leader, operation can go through local DC and inter-DC replication can be done in background hidden from user - perceived performance may be better as well
+b. Tolerance of DC outages - In case of single leader, system is down for writes till failover replaces leader. In case of multi leader, each DC operates independently and failed DC catches up with replication once it is back
+c. Tolerance of Nw problems - Traffic between DCs goes over public internet, which is less reliable than local networks within a DC. In case of a single leader, sensitivity to the inter-DC links is high as replication has to be done synchronously. In case of multi-leader, writes can continue in other DCs, and replication can be done asynchronously between DCs
+
+BIGGEST DRAWBACK OF MULTI-LEADER IS RESOLVING WRITE CONFLICTS (Other issues - autoincrementing keys, triggers and integriy constraints)
+
+2. Clients with offline operation: Applications may perform read and write operations when offline (calendar app on phone/laptop). Any changes made when offline need to be synced once device is online. In this case, every device acts as a datacenter with an unrelieable network connection to other DCs. Each device writes to local DB that acts as a leader, and there is an asynchronous multi-leader replication across replicas of the calendar on different devices.
+
+3. Collaborative Editing: Real-time collaborative editing applications allow several people to edit a document at the same time. When a user edits a document, changes are instantly applied to local replica (state of the doc in local browser) and asynchronously replicated to the server and other users. 
+One way to guarantee no conflicts is using a locking mechanism and any users must first obtain a lock before editing the document, after any previous user has committed their changes and released the lock. This is equivalent to single-leader replication with transactions on the leader.
+For faster collaboration, unit of change can be reduced to something like a single keystroke and also avoid locking. Allows multiple users to edit simultaneously but introduces the issues of multi-leader replication i.e. need for conflict resolution.
+
+Handling Write Conflicts
