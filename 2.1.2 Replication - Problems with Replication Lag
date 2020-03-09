@@ -1,0 +1,10 @@
+Read-Scaling Architecture - For workloads which are read-heavy and consists of small percentage of writes (common pattern in web applications), one good option is to create many followers and distribute read requests across these. Removes load from leader and decreases latency. You can increase read handling capacity by adding more followers. But replication works well here only if asynchronously done (otherwise one follower going down will stop the entire system).
+Drawback in async replication is follower falling behind the leader in processing writes - leads to inconsistency in database (same read against leader and follower gives different results). Lag can range from fraction of a second to several minutes (when system is at near capacity). But when all writes are stopped temporarily, followers catch up - Eventual Consistency. The main issues with replication lag are as follows:
+
+1. Reading Your Own Writes
+
+2. Monotonic Reads
+
+3. Consistent Prefix Reads
+
+Solutions for Replication Lag
