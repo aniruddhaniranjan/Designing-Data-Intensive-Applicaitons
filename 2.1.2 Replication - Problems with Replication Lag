@@ -2,6 +2,15 @@ Read-Scaling Architecture - For workloads which are read-heavy and consists of s
 Drawback in async replication is follower falling behind the leader in processing writes - leads to inconsistency in database (same read against leader and follower gives different results). Lag can range from fraction of a second to several minutes (when system is at near capacity). But when all writes are stopped temporarily, followers catch up - Eventual Consistency. The main issues with replication lag are as follows:
 
 1. Reading Your Own Writes
+When new data is submitted, it is sent to leader. But when data is read, it can be read from follower (Data is frequently viewed but only occasionally written). In async replication, if the data is read shortly after being written, it might not yet have reached a follower - it appears that the data written by user was lost. So we need "Read-After-Write Consistency" or "Read-Your-Writes Consistency". It assures the user that their own input has been saved - if user reloads the page, their own write will definitely be visible (no guarantees on writes from other users).
+a. When reading something a user might have modified, read it only from leader (need to know if it's info user might have modified without querying - one type of such info is user profile info on a site)
+b. Use other criteria when most info can be modified by user - for one minute since last write, read only from the leader or monitor repl. lag on follower and avoid reading from a follower which is more than a minute behind
+c. Client can remember timestamp of it's most recent write - use followers which serve data upto this timestamp. If a replica is behind delay the read until it catches up to this time
+
+* If replicas are distributed geographically, read to a leader must be routed to appropriate datacenter
+If user uses multiple devices, the "Cross-Device Read-After-Write Consistency" must be provided. Additional issues here are:
+a. If timestamp of last update is used, then this metadata has to be centralized - code on one device doesn't know what updates happened on another device
+b. If replicas are in different datacenters (home wifi vs mobile cellular network), reading from leader must first route all requests from all devices to the leader's datacenter
 
 2. Monotonic Reads
 
