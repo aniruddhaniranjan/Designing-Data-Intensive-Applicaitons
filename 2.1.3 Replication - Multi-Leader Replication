@@ -15,4 +15,13 @@ BIGGEST DRAWBACK OF MULTI-LEADER IS RESOLVING WRITE CONFLICTS (Other issues - au
 One way to guarantee no conflicts is using a locking mechanism and any users must first obtain a lock before editing the document, after any previous user has committed their changes and released the lock. This is equivalent to single-leader replication with transactions on the leader.
 For faster collaboration, unit of change can be reduced to something like a single keystroke and also avoid locking. Allows multiple users to edit simultaneously but introduces the issues of multi-leader replication i.e. need for conflict resolution.
 
+What is a confict - Two concurrent writes performed on a record on different leaders, setting to two different values. It could also be more subtle - such as a room-booking system. System needs to ensure no overlapping bookings (room/time). Even if availability is checked before making the booking, this might happen on different leaders.
+
 Handling Write Conflicts
+1. Synchronous vs. Asynchronous Conflict Detection - In a single-leader, there would be no conflicts as the second writer blocks, waits for first write to complete, or aborts and forces the user to retry. But in a multi-leader setup, both writes are successful and conflict is only detected asynchronously at some later point - by which time it might be too late to resolve conflict. Conflict detection can be made synchronous, by only confirming success after writes are written to all leaders. In which case advantage of multi-leader replication is lost (writing independently to more than one leader) - rather use single-leader replication.
+
+2. Conflict Avoidance - If applications can ensure that all writes for a particular record go through the same leader, then conflicts cannot occur. Many implementations of multi-leader replication handle conflicts poorly, hence conflict avoidance is recommended. If a user can edit their own data, then all writes and reads are sent to the leader of a particular DC - for any user it is a single-leader scenario. But sometimes the leader and DC has to be changed (failure/location change). Here we may face concurrent writes to different leaders and hence conflicts
+
+3. Converging towards a consistent state - 
+
+4. Custom conflict resolution logic - 
