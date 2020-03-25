@@ -1,1 +1,12 @@
+If leader exists, client sends requests to one leader replica and database system copies the write to other replicas. The leader determines the order in which replicas see the write
+In leaderless, client sends the write requests to several replicas or via a coordinator node which sends to several replicas. The coordinator may not enforce a particular ordering of writes.
+
+Writing to the database when a node is down - In a leader-based config we wait for failover. In leaderless, there is no failover. If an acceptable number of replicas successfully process the write request, then the client assumes the operation is successful and ignores the leader replica which is down. When the unavailable node comes back, it will have stale data. To solve this - client sends read requests to several replicas, and might get back different results. Version numbers are used to determine which value is up-to-date and which value is stale
+
+Read repair and anti-entropy - The purpose of this is to ensure that all the replicas eventually get all the write requests/all the data.
+a. Read repair - When a client makes a read request to several replicas, it can detect the stale value using the version numbers. Then it writes back the up-to-date value to the replica which had the stale value. This works well for values that are frequently read.
+b. Anti-entropy process - Some datastores have a background process which constantly looks for differences in the data between replicas and copies any missing data from one replica to another. Unlike replication log, there is no particular order in which writes are copied and there may be a significant delay before which the writes are updated.
+Without an anti-entropy process, values that are frequently read might not be updated for a long time. Hence they have reduced durability or higher susceptability to data loss.
+
+Quorums for reading and writing - Similar to generic case. If there are n nodes, we need to write to w nodes and read from r nodes where w + r > n. These are called quorum reads and writes. We can expect to get up-to-date values because at least one of the r nodes will have an up-to-date value. (r and w are the minimum number of votes required for the reads and writes to be successful). Typically, make n an odd  number and make r and w = (n+1)/2. But some cases are different - for few writes and large reads make w = n and r = 1 (but this makes write fail even if one node is down)
 
