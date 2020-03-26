@@ -22,6 +22,10 @@ d. If a write succeeds in fewer than w replicas, the operation is considered to 
 e. If a node carrying a new value fails, and the data is restored from a node which has the old value, then the write quorum may no longer be satisfied
 f. Timing issues - Linearizability and quorums
 
-Dynamo-style databases are optimized for use cases that can tolerate eventual consistency. Parameters w and r allow to change probability of values read being stale - but it can't be taken as guarantees. Guarantees such as 'reading your writes', 'monotonic reads', or 'consistent prefix reads' can't be made. The solutions here are similar to transactions or consensus. 
+Dynamo-style databases are optimized for use cases that can tolerate eventual consistency. Parameters w and r allow to change probability of values read being stale - but it can't be taken as guarantees. Guarantees such as 'reading your writes', 'monotonic reads', or 'consistent prefix reads' can't be made. The solutions then are similar to transactions or consensus. 
 
-Monitoring Staleness - 
+Monitoring Staleness - It is important to monitor how up-to-date the results returned by DBs are, even if staleness can be tolerated by the system. If it falls behind significantly, it should alert so that cause can be investigated (overloaded node, nw problem)
+For leader-based replication, DB typically exposes metrics for replication lag (can be tied to a monitoring system). This is because writes are applied to leader and then to followers from the replication log. Each node has a position in the replication log, and the difference in node's position and leader's current position can indicate the amount of replication lag
+In leaderless systems there is no ordering of writes - tougher to measure lag. If system uses only read-repair and no anti-entropy, then in the case of infrequent reads, the values read might be very old. It is a good idea to include staleness measurements as part of DB metrics - although eventual consistency is a vague guarantee, quantifying it is good for operability
+
+Sloppy Quorums and Hinted Handoff
