@@ -10,3 +10,18 @@ Without an anti-entropy process, values that are frequently read might not be up
 
 Quorums for reading and writing - Similar to generic case. If there are n nodes, we need to write to w nodes and read from r nodes where w + r > n. These are called quorum reads and writes. We can expect to get up-to-date values because at least one of the r nodes will have an up-to-date value. (r and w are the minimum number of votes required for the reads and writes to be successful). Typically, make n an odd  number and make r and w = (n+1)/2. But some cases are different - for few writes and large reads make w = n and r = 1 (but this makes write fail even if one node is down)
 
+Reads and writes are always sent to all n replicas in parallel - w and r determine how many nodes we wait for (how many of the nodes need to report success before we consider the read or write to be successful). If fewer than w or r nodes return success, then reads or writes return an error. Reasons for node to be unavailable - node is down (crashed/powered down), error executing the operation (can't write because disk is full), network interruption between client and node, etc. We only care about success/failure and not about the cause of failure.
+
+Limitations of Quorum Consistency - Usually w and r values are set to majority (more than n/2) so that the nodes to which we write to and read from must overlap at minimum of one node. But, it's not necessary to have them as majority. Here, reads and writes are still sent to n nodes, but a smaller number of nodes need to return successfully in order for the operation to be considered successfull. There is a greater chance of reading stale data in case w + r < n. This is because it's likely that the read operations 'r' didn't include any nodes which had the latest date from the 'w' succesfull writes. Advantage - lower latency and higher availability, even if many replicas become unavailable we can continue processing reads and writes (until the number of available replicas falls below w & r)
+
+Edge cases where stale data can be read even when 'w + r > n':
+a. If sloppy quorum is used, then the reads 'r' can end up on nodes different from the 'w' writes, no guaranteed overlap
+b. If two writes occur concurrently, it is not clear which one happened first. Writes can always be lost - e.x. due to clock skew if merge is resolved based on timestamp.
+c. If read and write happen simultaneously, it's not certain if the read returns the old or new value - read/write happen on diff nodes
+d. If a write succeeds in fewer than w replicas, the operation is considered to have failed but the write is not rolled back on the replicas where it succeeded. The reads later on may or may not return the value from this write.
+e. If a node carrying a new value fails, and the data is restored from a node which has the old value, then the write quorum may no longer be satisfied
+f. Timing issues - Linearizability and quorums
+
+Dynamo-style databases are optimized for use cases that can tolerate eventual consistency. Parameters w and r allow to change probability of values read being stale - but it can't be taken as guarantees. Guarantees such as 'reading your writes', 'monotonic reads', or 'consistent prefix reads' can't be made. The solutions here are similar to transactions or consensus. 
+
+Monitoring Staleness - 
