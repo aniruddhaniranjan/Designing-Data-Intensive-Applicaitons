@@ -29,3 +29,10 @@ For leader-based replication, DB typically exposes metrics for replication lag (
 In leaderless systems there is no ordering of writes - tougher to measure lag. If system uses only read-repair and no anti-entropy, then in the case of infrequent reads, the values read might be very old. It is a good idea to include staleness measurements as part of DB metrics - although eventual consistency is a vague guarantee, quantifying it is good for operability
 
 Sloppy Quorums and Hinted Handoff
+DBs with properly configured quorums can tolerate failed individual nodes w/o failover. Even if individual nodes are slow, it can be tolerated. So, leaderless replication is a good choice for high availability, low latency systems, if some staleness is tolerated.
+When a certain set of nodes are unreachable to a client, they might still be reachable to a different client
+In a system with much larger than n nodes, a client maybe able to reach some DB nodes, but not the group of nodes required for quorum, for a successful write of a particular value - a. Return errors for all requests for which we can't reach a quorum of w or r nodes OR b. Accept writes anyway, and write them to some nodes which are reachable but where the value usually doesn't reside.
+Option 'B' is called "Sloppy Quorum" - Success still needs w or r responses, but it could also come from nodes which are not "Home" nodes for a value. Once the nw issue is fixed, the value is sent to the appropriate "Home" node, from the nodes which temp accepted these writes. This is called "Hinted Handoff". Sloppy Quorum is good for increasing high availability. (Tolerate staleness). It is not a strict quorum, but only a guarantee of durability and staleness exists till Hinted Handoff is complete.
+
+Multi-DC Operation
+
