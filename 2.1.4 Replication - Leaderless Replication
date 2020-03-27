@@ -56,5 +56,6 @@ a. The server maintains a version number for every key, increments the version f
 b. When a client reads a key, server returns all values that have not been overwritten and latest version number. A client must perform the read before writing
 c. When a client writes a key, it includes the version from prior read and merges and includes all values obtained from prior read (Response from a write is similar to a read - returning updated current values which allows Chaining writes)
 d. When the server receives a write with a perticular version number, it overwrites all values with that version number or below (since it knows they have been merged into the current write). The server must retain any version numbers higher than the once received in the current write (because they are concurrent with the current write)
+[If a write is made without a version number, it is concurrent with all other writes and it won't overwrite anything - it is just returned along with all other values]
 
-
+Merging concurrently written writes - 
