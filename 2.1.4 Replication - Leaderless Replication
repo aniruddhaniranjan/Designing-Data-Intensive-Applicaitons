@@ -34,5 +34,13 @@ When a certain set of nodes are unreachable to a client, they might still be rea
 In a system with much larger than n nodes, a client maybe able to reach some DB nodes, but not the group of nodes required for quorum, for a successful write of a particular value - a. Return errors for all requests for which we can't reach a quorum of w or r nodes OR b. Accept writes anyway, and write them to some nodes which are reachable but where the value usually doesn't reside.
 Option 'B' is called "Sloppy Quorum" - Success still needs w or r responses, but it could also come from nodes which are not "Home" nodes for a value. Once the nw issue is fixed, the value is sent to the appropriate "Home" node, from the nodes which temp accepted these writes. This is called "Hinted Handoff". Sloppy Quorum is good for increasing high availability. (Tolerate staleness). It is not a strict quorum, but only a guarantee of durability and staleness exists till Hinted Handoff is complete.
 
-Multi-DC Operation
+Multi-DC Operation - Leaderless replication is also suitable for multi DC operation since it tolerates conflicting concurrent writes, network interruptions, and latency spikes. In Cassandra and Voldemort, the n nodes includes nodes in all DCs. Writes are sent to all DCs but client wits for quorum of nodes only from local DC so that it's unaffected by inter-DC link delays. Writes to other DCs have higher latency and are done asynchronously. Riak does the communication only in local DC and cross DC writes are done asynchronously
 
+Detecting Concurrent Writes
+Dynamo style DBs allow multiple clients to write concurrently to the same key, in which case there will be conflicts even if strict quorum is used (similar to multi-leader but conflicts can occur due to read repair and hinted handoff as well).
+Problem is write requests arrive in diff orders at diff nodes due to network delays, partial failures. If each node simply overwrote older values then the nodes would become permanently inconsistent. But nodes should converge - DBs don't handle this well but application developer should use some methods to handle it
+
+Last Write Wins (discarding concurrent writes) - Declare that each replica overwrite and discard the "older" value with "recent" value. As long as there is an unambigious way to determine "recent" value, and every write is replicated to each replica, system converges. Sometimes writes are concurrent and we don't know which value is "recent". 
+If a timestamp is used to determine order and writes with earlier timestamps discarded, the approach is LWW. It achieves eventual consistency but at the cost of durability - some of successful concurrent writes will be discarded. LWW may drop writes that are not event consistent. If caching is used/data loss can be tolerated LWW is a possible solution. Only way to ensure LWW fully works is to make a key/value immutable once a write is performed.
+
+Happens-before relationship and concurrency - 
