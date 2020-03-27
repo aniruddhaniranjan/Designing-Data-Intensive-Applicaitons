@@ -48,4 +48,4 @@ Happens-before relationship and concurrency - An operation A happens before B if
 Capturing the Happens-Before relationship:
 Causal dependencies between concurrent writes can be shown as below:
 
-https://github.com/aniruddhaniranjan/Designing-Data-Intensive-Applications/blob/master/Causal%20Dependencies%201.png
+![Causal dependencies](https://github.com/aniruddhaniranjan/Designing-Data-Intensive-Applications/blob/master/Causal%20Dependencies%201.png)
