@@ -43,4 +43,7 @@ Problem is write requests arrive in diff orders at diff nodes due to network del
 Last Write Wins (discarding concurrent writes) - Declare that each replica overwrite and discard the "older" value with "recent" value. As long as there is an unambigious way to determine "recent" value, and every write is replicated to each replica, system converges. Sometimes writes are concurrent and we don't know which value is "recent". 
 If a timestamp is used to determine order and writes with earlier timestamps discarded, the approach is LWW. It achieves eventual consistency but at the cost of durability - some of successful concurrent writes will be discarded. LWW may drop writes that are not event consistent. If caching is used/data loss can be tolerated LWW is a possible solution. Only way to ensure LWW fully works is to make a key/value immutable once a write is performed.
 
-Happens-before relationship and concurrency - 
+Happens-before relationship and concurrency - An operation A happens before B if B knows about A, B depends on A or B builds on top of A in some way. This is key to defining concurrency - two operations are concurrent if neither happens before the other. Either A happens before B, B happens before A or they are concurrent. If one operation happens before the other then value is overwritten and if they are concurrent then conflicts need to be resolved.
+
+Capturing the Happens-Before relationship:
+Causal dependencies between concurrent writes can be shown as below:
