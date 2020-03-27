@@ -1,0 +1,9 @@
+Introduction
+For very large datasets and for very high throughput, simply having copies of the same data on different nodes is insufficient - we need to split the complete set of data into "Partitions", which is known as "Sharding". Different technologies use different terminologies:
+Shard - MongoDB, Elastic Search, SolrCloud; Region - HBase; Tablet - Bigtable; Vnode - Cassandra, Riak; VBucket - Couchbase
+
+Partitions are defined such that each piece of data (record/row/document) belongs to exactly one partition. Each partition acts a DB of its own; although the overall DB system may operate such that it touches multiple partitions at the same time
+The main purpose is "Scalability". Diff partitions are placed on different nodes in a "Shared-Nothing" cluster. Large datasets can be distributed across many disks and query load can be distributed across many nodes/processors
+For queries needed a single partition, each node can independently execute the queries for it's own partition - this can be scaled by adding more nodes. Large complex queries can be parallelized across many nodes. System might be transactional or analytical but partitioning applies to both types of workloads.
+
+Replication and Partitioning - Partitioning is usually combined with replication so that copies of partitions are stored on different nodes. Each record belongs to only one partition but is stored on multiple nodes for fault tolerance. A node can store more than one partition - each partition's leader is assigned to one node and followers to other nodes i.e. each node will be the leader for some partitions and follower for some other partitions. Partitioning scheme is mostly independent of replication scheme.
