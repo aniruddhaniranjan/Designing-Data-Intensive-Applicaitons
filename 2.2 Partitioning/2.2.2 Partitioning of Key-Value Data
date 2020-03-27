@@ -1,0 +1,7 @@
+The goal of partitioning is to spread the data and the query load evenly across nodes. If every node takes it's fair share then n nodes should theoretically be able to handle n times the data and n times the read and write throughput of a single node. If partitioning is unfair and some partitions have more data/queries, then the partitioning is called "Skewed". A partition with disproportionate load is called a hot spot - data or query (worst case just 1 node gets majority/all of the data/query). Random partitioning ensures fairness but locating the data is inefficient as all nodes need to be queried in parallel (no way to know which node has the data)
+
+Partition by Key Range - 
+
+Partition by Hash of Key - 
+
+Skewed Workloads and Relieving Hot Spots - 
