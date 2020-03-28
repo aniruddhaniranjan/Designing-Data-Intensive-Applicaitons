@@ -1,1 +1,14 @@
+Changes happen in a DB  - query throughput increase leading to increase in num of CPUs, dataset size increases leading to increase in RAM and disks to store it, machine fails and other machines must take over. These changes require load to be moved between nodes in the cluster. This is called "Rebalancing". Irrespective of the partitioning scheme, Rebalancing is expected to meet these needs:
+a. After rebalancing, the load (data storage, read/write requests) should be shared fairly between nodes in the cluster
+b. During rebalancing, DB should continue to accept reads/writes
+c. Optimum amount of data should be moved between node, to make rebalancing fast and minimize load on network and disk I/O
 
+Strategies for rebalancing
+
+Bad approach is hash mod N - Hashes of the key are divided into ranges and assigned to partitions. Using the value hash mod N to assign to a partition is bad because N, the number of nodes, changes. Thus, hash mod N keeps changing for many of the keys and rebalancing constantly is expensive
+
+Fixed number of partitions - Create many more partitions than there are nodes and assign several partitions to each node. If a new node is added to the cluster, it steals a few partitions from existing nodes until partitions are evenly/fairly distributed again. Node removal causes the reverse process.
+* Only entire partitions are moved across nodes - the total number of partitions is unchanged and the assignment of keys to partitions is unchanged. Only assignment of partitions to nodes changes. The change of assignment takes time - large amount of data transfer across nw - and the old partition assignment is used for any reads/writes during this reassignment. (Mismatched hw can potentially be accounted for here by assigning more partitions to more powerful nodes.)
+In this config, number of partitions is usually fixed when DB is setup and not changed later. Although it possible to split and merge partitions, due to simplicity many fixed-partition DBs don't suppport partition splitting. Number of partitions chosen initially is the max no of nodes you can have - hence it has to be large enough. But due to mgmt overhead per partition, too many shouldn't be chosen. Choosing right no of partitions is difficult if the dataset size is small initially but much larger later on. Size of each partition grows along with total dataset size. If the partition size is too large, rebalancing and recovering from node failures becomes expensive. Too small means overhead is too much. Optimal number is hard to achieve if num of partitions is fixed but dataset size varies.
+
+Dynamic partitioning - 
