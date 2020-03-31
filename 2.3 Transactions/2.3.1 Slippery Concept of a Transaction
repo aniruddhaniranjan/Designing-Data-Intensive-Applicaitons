@@ -1,0 +1,9 @@
+Things that can go wrong in data systems:
+ DB software or hardware may fail (even in middle of an operation)
+ Application may crash anytim (halfway thru a series of operations)
+ Nw interruptions can cut off appl from DB or DB nodes from each other
+ Several clients write to DB overwriting each others changes
+ Client reads data that doesn't make sense since it's only partially written
+ Race conditions b/w clients can cause unexpected bugs
+Reliable systems have to deal with these to prevent catastrophe. Implementing fault tolerance mechanisms is tough - think about everything that can go wrong, test everything to ensure it solves the problems
+
