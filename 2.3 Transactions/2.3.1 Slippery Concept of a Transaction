@@ -23,4 +23,12 @@ c. Isolation - DB access from multiple clients is not a problem if they access d
 
 d. Durability - Promise that once a transaction has committed successfully, data written will not be forgotten even if HW fails or DB crashes. In single-node DB, it means data is stored in SSD/hard drive. It usually also involves a write-ahead log or similar which allows recovery in case data structures on disk are corrupted. In replicated DB, it means data is copied to some number of nodes. In order to provide durability guarantee, DB must wait till these writes or replications are complete before reporting transaction as successfully committed. Perfect durability doesn't exist.
 
-Single Object and Multi-Object Operations - 
+Single Object and Multi-Object Operations
+Atomicity - DB saves you from worrying about partial failure by guaranteeing all-or-nothing semantics
+Isolation - Concurrent transaction should see all updates from other conc transaction or none of the transaction, but not a subset
+Multi-object transaction are needed if several pieces of data need to be kept in sync. Example - list of unread emails and number of unread emails.
+Need for atomicity - Listing could show unread email but count is 0, because new email is added to list (first write is complete) but counter is not yet incremented (we are seeing state before second write is complete). We should not see half way point - both or none
+Need for isolation - If error occurs somewhere in transaction the list and count could be out of sync. If update to counter fails, then transaction is aborted and inserted new email is rolled back from the list
+To determine which operations are in same transaction relation DB uses TCP connection to client - on any connection everything between BEGIN TRANSACTION and COMMIT is considered same transaction. Many nonrelational DBs don't have such a semantics for multi-put (put for some documents succeed and don't for others)
+
+Single-object writes - 
