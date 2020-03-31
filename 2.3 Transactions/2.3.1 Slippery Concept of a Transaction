@@ -7,3 +7,10 @@ Things that can go wrong in data systems:
  Race conditions b/w clients can cause unexpected bugs
 Reliable systems have to deal with these to prevent catastrophe. Implementing fault tolerance mechanisms is tough - think about everything that can go wrong, test everything to ensure it solves the problems
 
+A Transaction is a way for an application to group several reads and writes together into a logical unit. Conceptually, these reads and writes in a transaction are executed as one operation: either the entire transaction succeeds (commit) or it fails (abort, rollback). If it fails, app can safely retry. Error handling becomes easy due to no partial failures - some ops fails and some succeed
+Goal is to simplify the programming model for apps accessing a DB. App is now free to ignore certain potential error scenarios and concurrency issues because DB takes care - these are called "Safety Guarantees". Not all apps need them - adv of weakening trans guarantee or removing is higher performance/availability. Some safety properties can be achieved without.
+Relation DBs always had transactions. Nonrelational NoSQL DBs introduced a new data model with replication and partitioning. Transactions were a casualty of this - many systems abandoned transactions or redefined it to mean a much weaker set of safety guarantees.
+
+Meaning of ACID
+
+Single Object and Multi-Object Operations
