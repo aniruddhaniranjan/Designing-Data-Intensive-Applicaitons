@@ -17,6 +17,10 @@ Safety guarantees provided by transactions are described by acronym ACID - Atomi
 a. Atomicity - In multi-threaded, if one thread executes an atomic op, another thread can't see the half finished result (system has two states, one before and one after the atomic op)
 But in ACID, atomicity describes what happens if a client wants to make several writes but a fault occurs after some of them are processed - then the transaction can't be completed (committed) due to a fault. Then transaction is aborted and changes discarded/undone. This ensures safe retry because we know changes are discarded and won't be repeated.
 
-b. Consistency - 
+b. Consistency - Refers to app specific notion of DB being in a "good state". Idea is that you have certain statements about you data that must always be true - "Invariants" (in acct system, credits and debits must be balanced). If a transaction starts with a DB that is valid according to these invariants, and the transaction writes preserve this validity, then the invariants are always satisfied. This depends on apps notion of invariants and is apps responsibility, not the DB (app decides which data to write, DB only stores it). App may rely on atomicity and isolation properties of the DB in order to achieve consistency.
 
-Single Object and Multi-Object Operations
+c. Isolation - DB access from multiple clients is not a problem if they access diff parts of DB. If they access the same parts, then it leads to a race condition. Isolation means that transactions executing concurrently are isolated from each other - can't step on each other. It is also called "Serializability" - each transaction can pretend it's the only transaction running on the entire Db. The DB ensures that when the concurrent transactions have finished executing, the result is the same as if they had run serially "one after another". Serializable Isolation has a high performance impact.
+
+d. Durability - Promise that once a transaction has committed successfully, data written will not be forgotten even if HW fails or DB crashes. In single-node DB, it means data is stored in SSD/hard drive. It usually also involves a write-ahead log or similar which allows recovery in case data structures on disk are corrupted. In replicated DB, it means data is copied to some number of nodes. In order to provide durability guarantee, DB must wait till these writes or replications are complete before reporting transaction as successfully committed. Perfect durability doesn't exist.
+
+Single Object and Multi-Object Operations - 
