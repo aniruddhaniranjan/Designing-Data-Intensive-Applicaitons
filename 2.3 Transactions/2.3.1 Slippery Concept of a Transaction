@@ -31,4 +31,9 @@ Need for atomicity - Listing could show unread email but count is 0, because new
 Need for isolation - If error occurs somewhere in transaction the list and count could be out of sync. If update to counter fails, then transaction is aborted and inserted new email is rolled back from the list
 To determine which operations are in same transaction relation DB uses TCP connection to client - on any connection everything between BEGIN TRANSACTION and COMMIT is considered same transaction. Many nonrelational DBs don't have such a semantics for multi-put (put for some documents succeed and don't for others)
 
-Single-object writes - 
+Single-object writes
+If there is a 20KB json write to DB - if nw connection is interrupted after 10KB have been sent, does DB store the first 10KB; if power fails while DB is in middle of writing to disk, do old and new values end up mixed; if a client reads while another is writing, does it see some partially updated value? 
+Storage engines almost always provide atomicity and isolation at level of one object. Atomicity can be done via log for crash recovery and isolation via locking mechanism. Some DBs have more ops like increment (removes need for read-modify-write) and compare-and set (write value allowed only if it's not conc changed by another client)
+This prevents lost updates when several client try updating same obj conc. Light-weight transactions.
+
+Need for Multi-object transactions
