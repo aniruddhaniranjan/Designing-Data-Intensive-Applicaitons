@@ -1,0 +1,14 @@
+There is a gradient between fully automatic rebalancing (system always decides when to change partitions and nodes w/o any admin) and fully manual (assignment and it's changes is fully controlled by admin). Fully automated has less operational work. But it is unpredictabe. Since rebalancing is expensive, if it is not done properly - it can overload n/w and nodes, and harm performance of requests while rebalancing is in progress. When automatic rebalancing is done along with automatic failure detection it is more dangerous. There could be false positives in failure detection due to a node being unresponsive - and system does rebalancing to move load away from it. This puts additional load on overloaded node, other nodes and network - makes situation worse, potentially cascading failure. It is good to have admin in the loop - slower but can help prevent operational surprises.
+
+Request Routing - How does a client know which node to connect to? Rebalancing changes assignment of partitions to nodes. Which IP address and port number should I connect to? This is an instance of a problem called "Service Discovery". Any service that is designed in a redundant way to work over multiple machines, aiming for HA, has this problem. Few different approaches are:
+a. Client sends its request to any nodes (round robin via a LB). If the node owns the required partition, then it handles the request. Otherwise it forwards the request to the appropriate node, receives the reply and passes reply to client.
+b. Client sends its request to a routing tier first. Which determines which nodes should handle this request and forwards it. Routing tier acts as a partition-aware LB.
+c. Client are aware of the partitioning & assignment - directly connect to appr node. Partition-aware Client.
+
+Key issues is learning about changes in assignment. It is challenging and all participants must agree - otherwise request is sent to the wrong node and is not processed correctly. This is the problem of "Consensus" which have some protocols, but hard to implement. Many distributed data systems rely on a separate coordination service like Zookeeper to track cluster metadata. Nodes register in Zookeeper which maintains authoritative mapping of partns to nodes. Actors like routing tier or client subscribe to info in ZK. When assignments changes, ZK notifies the routing tier which updates its routing table.
+
+ZK is used by HBase, Solr, Kafka, LinkedIn's Espresso (Helix over ZK). MongoDB has it's own config server.
+Cassandra and Riak use a "Gossip Protocol", where nodes disseminate info on any changes in the cluster state. Request is sent to any node and forwarded to right node. Puts more complexity on cluster nodes but doesn't depend on external coord service.
+Couchbase doesn't do auto - rebalancing
+
+Clients also need to know IP/port while sending request to a random node or the routing tier. But the changes here are slow enough that DNS suffices
