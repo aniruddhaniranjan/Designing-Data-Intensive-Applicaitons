@@ -12,5 +12,11 @@ Goal is to simplify the programming model for apps accessing a DB. App is now fr
 Relation DBs always had transactions. Nonrelational NoSQL DBs introduced a new data model with replication and partitioning. Transactions were a casualty of this - many systems abandoned transactions or redefined it to mean a much weaker set of safety guarantees.
 
 Meaning of ACID
+Safety guarantees provided by transactions are described by acronym ACID - Atomicity, Consistency, Isolation and Durability. Often guarantees provided by "ACID compliant" systems are not clear. Systems that don't meet ACID are called BASE - Basically Available, Soft state and Eventually consistency
+
+a. Atomicity - In multi-threaded, if one thread executes an atomic op, another thread can't see the half finished result (system has two states, one before and one after the atomic op)
+But in ACID, atomicity describes what happens if a client wants to make several writes but a fault occurs after some of them are processed - then the transaction can't be completed (committed) due to a fault. Then transaction is aborted and changes discarded/undone. This ensures safe retry because we know changes are discarded and won't be repeated.
+
+b. Consistency - 
 
 Single Object and Multi-Object Operations
