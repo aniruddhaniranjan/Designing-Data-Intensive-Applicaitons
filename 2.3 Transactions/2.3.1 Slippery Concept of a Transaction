@@ -44,3 +44,9 @@ c. DBs with secondary indexes (almost everything except pure KV stores), index n
 Can manage without transactions but appl code becomes too complex w/o atomicity, and conc issues occur w/o isolation
 
 Handling errors and aborts
+Key feature of transaction is that it can be safely aborted and retried if an error occurs. If DB is in danger of violating atomicity, isolation or durability guarantees, it prefers to abort and rollback entire transaction rather than be half-finished. In some cases, like datastores with leaderless replication, work on a best-effort basis - DB will do what it can and if it runs into an error, there will be no undoing of work already finished. Hence, it's application's responsibility to recover from errors. Some issues with retrying aborted transactions are:
+a. If trans actually succeeded but the nw failed while the server was trying to send acknowledgement of success to the client, then the client think trans failed and it performs retry. So trans gets performed twice, unless appl level de-duplication exists
+b. If error is due to an overload, retry will make the situation worse. To avoid such feedback cycles, other mechanisms such can be used - limiting number of retries, using exponential backoff, handle overload-related errors differently
+c. It's only worth retrying after transient errors (deadlock, isolation guarantee violation, temporary nw interruptions, failover); After permanent errors (constraint violation - trans succeeded fine but data written was wrong) retry is meaningless
+d. If trans has other effects outside the DB, those might happen even if trans is aborted. Ex - we don't want to send an email everytime trans is retried. If we want to make sure several systems either commit or abort together, "Two Phase Commit 2PC" can be used
+e. If client process fails while retrying, the data being written is lost
