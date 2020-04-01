@@ -37,3 +37,10 @@ Storage engines almost always provide atomicity and isolation at level of one ob
 This prevents lost updates when several client try updating same obj conc. Light-weight transactions.
 
 Need for Multi-object transactions
+Many distributed DB don't implement multi-object trans because they are difficult to implement across partitions and compromises high availability and performance. Not all scenarios can be covered by just single-object operations coupled with a key-value data model. Scenarios where multi-object transactions are necessary:
+a. In relational data model, a row in one table has a foreign key reference to a row in another table (graph data model has vertex between nodes). MO trans ensures that references remain valid (side - while inserting MOs foreign key needs to be accurate for data to make sense)
+b. Document DBs lacking join functionality also encourage denormalization. When denormalization info needs to be updated, several docs need to be updated at one go. MO trans very useful here to prevent data from getting out of sync
+c. DBs with secondary indexes (almost everything except pure KV stores), index needs updating when object changes. Indexes are different objects from POV of trans - ex, without transaction isolation document appears in one index but is not updated and shown in another index
+Can manage without transactions but appl code becomes too complex w/o atomicity, and conc issues occur w/o isolation
+
+Handling errors and aborts
